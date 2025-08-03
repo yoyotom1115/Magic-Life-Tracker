@@ -1,0 +1,97 @@
+/* Animation Effects */
+.life-effect {
+    position: absolute;
+    font-size: 1.5rem;
+    font-weight: bold;
+    pointer-events: none;
+    animation: lifeEffect 1s ease-out forwards;
+    z-index: 1000;
+}
+
+.life-effect.positive {
+    color: #10b981;
+}
+
+.life-effect.negative {
+    color: #ef4444;
+}
+
+.commander-damage-effect {
+    position: absolute;
+    font-size: 1.2rem;
+    font-weight: bold;
+    pointer-events: none;
+    animation: commanderDamageEffect 1s ease-out forwards;
+    z-index: 1000;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.commander-damage-effect.positive {
+    color: #ef4444;
+}
+
+.commander-damage-effect.negative {
+    color: #10b981;
+}
+
+@keyframes lifeEffect {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-50px) scale(1.2);
+    }
+}
+
+@keyframes commanderDamageEffect {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -100px) scale(1.2);
+    }
+}
+
+@keyframes resetPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.life-high {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+}
+
+.life-low {
+    background: linear-gradient(135deg, #f59e0b, #ef4444) !important;
+}
+
+.life-critical {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+}
+
+.life-negative {
+    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+}
+
+.commander-damage-high {
+    background: linear-gradient(135deg, #f59e0b, #ef4444) !important;
+}
+
+.commander-damage-critical {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+}
+
+.player-section {
+    position: relative;
+}
+
+.commander-damage-section {
+    position: relative;
+}

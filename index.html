@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Life Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles_effects.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Magic Life Tracker</h1>
+            <p>Track life totals for your Magic: The Gathering game</p>
+        </header>
+
+        <button class="settings-toggle" onclick="toggleSettings()">⚙️ Settings</button>
+
+        <div class="settings-menu" id="settingsMenu">
+            <div class="settings-header">
+                <h3>Game Settings</h3>
+                <button class="settings-close" onclick="toggleSettings()">×</button>
+            </div>
+            <div class="settings-content">
+                <div class="player-count-selector">
+                    <label for="playerCount">Number of Players:</label>
+                    <select id="playerCount" onchange="changePlayerCount()">
+                        <option value="2">2 Players</option>
+                        <option value="3">3 Players</option>
+                        <option value="4" selected>4 Players</option>
+                    </select>
+                </div>
+                <div class="random-selector">
+                    <button class="btn btn-random-select" onclick="selectRandomPlayer()">🎲 Select First Player</button>
+                </div>
+                <div class="sound-control">
+                    <button class="btn btn-sound-toggle" onclick="toggleSound()" id="soundToggle">🔊 Sound: On</button>
+                </div>
+                <div class="starting-life-section">
+                    <label for="startingLife">Starting Life:</label>
+                    <input type="number" id="startingLife" value="40" min="1" max="999">
+                    <button class="btn btn-set-life" onclick="setStartingLife()">Set</button>
+                </div>
+                <div class="reset-controls">
+                    <button class="btn btn-reset-all" onclick="resetAll()">Reset All Players</button>
+                    <button class="btn btn-reset-all-commander" onclick="resetAllCommanderDamage()">Reset All Commander Damage</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="dice-roller-section">
+                <h3>Dice Roller</h3>
+                <div class="dice-roller">
+                    <div class="dice-container">
+                        <div class="dice" id="mainDice"></div>
+                    </div>
+                    <div class="dice-controls">
+                        <button class="btn btn-dice" onclick="rollDice(2)">d2</button>
+                        <button class="btn btn-dice" onclick="rollDice(4)">d4</button>
+                        <button class="btn btn-dice" onclick="rollDice(6)">d6</button>
+                        <button class="btn btn-dice" onclick="rollDice(10)">d10</button>
+                        <button class="btn btn-dice" onclick="rollDice(20)">d20</button>
+                    </div>
+                </div>
+            </div>
+            <main class="game-board four-players" id="gameBoard">
+                <div class="player-section" id="player1">
+                                    <button class="menu-toggle" onclick="toggleMenu(1)">☰</button>
+                <div class="side-menu" id="menu1">
+                    <div class="menu-header">
+                        <h4>Player 1 Menu</h4>
+                        <button class="menu-close" onclick="toggleMenu(1)">×</button>
+                    </div>
+                    <div class="menu-content">
+                        <div class="menu-item">
+                            <label>Status Effects:</label>
+                            <button class="monarch-toggle" onclick="toggleMonarch(1)" id="monarchBtn1">Claim Monarchy</button>
+                            <button class="initiative-toggle" onclick="toggleInitiative(1)" id="initiativeBtn1">Take Initiative</button>
+                            <button class="ascend-toggle" onclick="toggleAscend(1)" id="ascendBtn1">Ascend</button>
+                        </div>
+                        <div class="menu-item">
+                            <label>Poison Counters:</label>
+                            <div class="poison-controls">
+                                <button class="btn-poison-decrease" onclick="changePoison(1, -1)">-1</button>
+                                <span class="poison-count" id="poisonMenu1">0</span>
+                                <button class="btn-poison-increase" onclick="changePoison(1, 1)">+1</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Commander Tax:</label>
+                            <div class="tax-controls">
+                                <button class="btn-tax-decrease" onclick="changeTax(1, -1)">-2</button>
+                                <span class="tax-count" id="taxMenu1">0</span>
+                                <button class="btn-tax-increase" onclick="changeTax(1, 1)">+2</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Energy Counters:</label>
+                            <div class="energy-controls">
+                                <button class="btn-energy-decrease" onclick="changeEnergy(1, -1)">-1</button>
+                                <span class="energy-count" id="energyMenu1">0</span>
+                                <button class="btn-energy-increase" onclick="changeEnergy(1, 1)">+1</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Experience Counters:</label>
+                            <div class="experience-controls">
+                                <button class="btn-experience-decrease" onclick="changeExperience(1, -1)">-1</button>
+                                <span class="experience-count" id="experienceMenu1">0</span>
+                                <button class="btn-experience-increase" onclick="changeExperience(1, 1)">+1</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Storm Count:</label>
+                            <div class="storm-controls">
+                                <button class="btn-storm-decrease" onclick="changeStorm(1, -1)">-1</button>
+                                <span class="storm-count" id="stormMenu1">0</span>
+                                <button class="btn-storm-increase" onclick="changeStorm(1, 1)">+1</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="player-header">
+                    <input type="text" class="player-name" id="playerName1" value="Player 1" onchange="updatePlayerName(1)" maxlength="16">
+                    <div class="status-indicators">
+                        <div class="crown-indicator hidden" id="crown1">👑</div>
+                        <div class="initiative-indicator hidden" id="initiative1">⚔️</div>
+                        <div class="ascend-indicator hidden" id="ascend1">🌟</div>
+                    </div>
+                    <div class="life-display">
+                        <div class="life-total-circle">
+                            <input type="number" class="life-total" id="life1" value="40" onchange="updateLifeFromInput(1)" onblur="validateLifeInput(1)">
+                        </div>
+                        <div class="counter-bubbles-container">
+                            <div class="tax-display hidden" id="taxDisplay1">
+                                <span class="tax-icon">💰</span><span class="tax-value">0</span>
+                            </div>
+                            <div class="poison-display hidden" id="poison1">
+                                <span class="poison-icon">☠️</span><span class="poison-value">0</span>
+                            </div>
+                            <div class="experience-display hidden" id="experience1">
+                                <span class="experience-icon">✨</span><span class="experience-value">0</span>
+                            </div>
+                            <div class="energy-display hidden" id="energy1">
+                                <span class="energy-icon">⚡</span><span class="energy-value">0</span>
+                            </div>
+                            <div class="storm-display hidden" id="storm1">
+                                <span class="storm-icon">🌪️</span><span class="storm-value">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    
+                    <div class="commander-damage-section">
+                        <div class="commander-damage-header">
+                            <div class="commander-damage-label">Commander Damage</div>
+                            <button class="commander-damage-toggle" onclick="toggleCommanderDamageMenu(1)">⌄</button>
+                        </div>
+                        <div class="commander-damage-menu" id="commanderDamageMenu1">
+                            <div class="commander-damage-item" data-from-player="2">
+                                <span class="commander-damage-player-name" id="commanderDamageLabel1-2">Player 2</span>
+                                <div class="commander-damage-controls">
+                                    <button class="btn btn-commander-decrease" onclick="changeCommanderDamage(1, 2, -1)">-1</button>
+                                    <span class="commander-damage-total" id="commanderDamage1-2">0</span>
+                                    <button class="btn btn-commander-increase" onclick="changeCommanderDamage(1, 2, 1)">+1</button>
+                                </div>
+                            </div>
+                            <div class="commander-damage-item" data-from-player="3">
+                                <span class="commander-damage-player-name" id="commanderDamageLabel1-3">Player 3</span>
+                                <div class="commander-damage-controls">
+                                    <button class="btn btn-commander-decrease" onclick="changeCommanderDamage(1, 3, -1)">-1</button>
+                                    <span class="commander-damage-total" id="commanderDamage1-3">0</span>
+                                    <button class="btn btn-commander-increase" onclick="changeCommanderDamage(1, 3, 1)">+1</button>
+                                </div>
+                            </div>
+                            <div class="commander-damage-item" data-from-player="4">
+                                <span class="commander-damage-player-name" id="commanderDamageLabel1-4">Player 4</span>
+                                <div class="commander-damage-controls">
+                                    <button class="btn btn-commander-decrease" onclick="changeCommanderDamage(1, 4, -1)">-1</button>
+                                    <span class="commander-damage-total" id="commanderDamage1-4">0</span>
+                                    <button class="btn btn-commander-increase" onclick="changeCommanderDamage(1, 4, 1)">+1</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="controls">
+                        <div class="life-controls">
+                            <button class="btn btn-decrease" onclick="changeLife(1, -1)">-1</button>
+                            <button class="btn btn-increase" onclick="changeLife(1, 1)">+1</button>
+                            <button class="btn btn-decrease" onclick="changeLife(1, -5)">-5</button>
+                            <button class="btn btn-increase" onclick="changeLife(1, 5)">+5</button>
+                        </div>
+                        <button class="btn btn-reset" onclick="resetLife(1)">Reset</button>
+                    </div>
+                </div>
+
+                <div class="player-section" id="player2">
+                                    <button class="menu-toggle" onclick="toggleMenu(2)">☰</button>
+                <div class="side-menu" id="menu2">
+                    <div class="menu-header">
+                        <h4>Player 2 Menu</h4>
+                        <button class="menu-close" onclick="toggleMenu(2)">×</button>
+                    </div>
+                    <div class="menu-content">
+                        <div class="menu-item">
+                            <label>Status Effects:</label>
+                            <button class="monarch-toggle" onclick="toggleMonarch(2)" id="monarchBtn2">Claim Monarchy</button>
+                            <button class="initiative-toggle" onclick="toggleInitiative(2)" id="initiativeBtn2">Take Initiative</button>
+                            <button class="ascend-toggle" onclick="toggleAscend(2)" id="ascendBtn2">Ascend</button>
+                        </div>
+                        <div class="menu-item">
+                            <label>Poison Counters:</label>
+                            <div class="poison-controls">
+                                <button class="btn-poison-decrease" onclick="changePoison(2, -1)">-1</button>
+                                <span class="poison-count" id="poisonMenu2">0</span>
+                                <button class="btn-poison-increase" onclick="changePoison(2, 1)">+1</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Commander Tax:</label>
+                            <div class="tax-controls">
+                                <button class="btn-tax-decrease" onclick="changeTax(2, -1)">-2</button>
+                                <span class="tax-count" id="taxMenu2">0</span>
+                                <button class="btn-tax-increase" onclick="changeTax(2, 1)">+2</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Energy Counters:</label>
+                            <div class="energy-controls">
+                                <button class="btn-energy-decrease" onclick="changeEnergy(2, -1)">-1</button>
+                                <span class="energy-count" id="energyMenu2">0</span>
+                                <button class="btn-energy-increase" onclick="changeEnergy(2, 1)">+1</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Experience Counters:</label>
+                            <div class="experience-controls">
+                                <button class="btn-experience-decrease" onclick="changeExperience(2, -1)">-1</button>
+                                <span class="experience-count" id="experienceMenu2">0</span>
+                                <button class="btn-experience-increase" onclick="changeExperience(2, 1)">+1</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Storm Count:</label>
+                            <div class="storm-controls">
+                                <button class="btn-storm-decrease" onclick="changeStorm(2, -1)">-1</button>
+                                <span class="storm-count" id="stormMenu2">0</span>
+                                <button class="btn-storm-increase" onclick="changeStorm(2, 1)">+1</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="player-header">
+                    <input type="text" class="player-name" id="playerName2" value="Player 2" onchange="updatePlayerName(2)" maxlength="16">
+                    <div class="status-indicators">
+                        <div class="crown-indicator hidden" id="crown2">👑</div>
+                        <div class="initiative-indicator hidden" id="initiative2">⚔️</div>
+                        <div class="ascend-indicator hidden" id="ascend2">🌟</div>
+                    </div>
+                    <div class="life-display">
+                        <div class="life-total-circle">
+                            <input type="number" class="life-total" id="life2" value="40" onchange="updateLifeFromInput(2)" onblur="validateLifeInput(2)">
+                        </div>
+                        <div class="counter-bubbles-container">
+                            <div class="tax-display hidden" id="taxDisplay2">
+                                <span class="tax-icon">💰</span><span class="tax-value">0</span>
+                            </div>
+                            <div class="poison-display hidden" id="poison2">
+                                <span class="poison-icon">☠️</span><span class="poison-value">0</span>
+                            </div>
+                            <div class="experience-display hidden" id="experience2">
+                                <span class="experience-icon">✨</span><span class="experience-value">0</span>
+                            </div>
+                            <div class="energy-display hidden" id="energy2">
+                                <span class="energy-icon">⚡</span><span class="energy-value">0</span>
+                            </div>
+                            <div class="storm-display hidden" id="storm2">
+                                <span class="storm-icon">🌪️</span><span class="storm-value">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    
+                    <div class="commander-damage-section">
+                        <div class="commander-damage-header">
+                            <div class="commander-damage-label">Commander Damage</div>
+                            <button class="commander-damage-toggle" onclick="toggleCommanderDamageMenu(2)">⌄</button>
+                        </div>
+                        <div class="commander-damage-menu" id="commanderDamageMenu2">
+                            <div class="commander-damage-item" data-from-player="1">
+                                <span class="commander-damage-player-name" id="commanderDamageLabel2-1">Player 1</span>
+                                <div class="commander-damage-controls">
+                                    <button class="btn btn-commander-decrease" onclick="changeCommanderDamage(2, 1, -1)">-1</button>
+                                    <span class="commander-damage-total" id="commanderDamage2-1">0</span>
+                                    <button class="btn btn-commander-increase" onclick="changeCommanderDamage(2, 1, 1)">+1</button>
+                                </div>
+                            </div>
+                            <div class="commander-damage-item" data-from-player="3">
+                                <span class="commander-damage-player-name" id="commanderDamageLabel2-3">Player 3</span>
+                                <div class="commander-damage-controls">
+                                    <button class="btn btn-commander-decrease" onclick="changeCommanderDamage(2, 3, -1)">-1</button>
+                                    <span class="commander-damage-total" id="commanderDamage2-3">0</span>
+                                    <button class="btn btn-commander-increase" onclick="changeCommanderDamage(2, 3, 1)">+1</button>
+                                </div>
+                            </div>
+                            <div class="commander-damage-item" data-from-player="4">
+                                <span class="commander-damage-player-name" id="commanderDamageLabel2-4">Player 4</span>
+                                <div class="commander-damage-controls">
+                                    <button class="btn btn-commander-decrease" onclick="changeCommanderDamage(2, 4, -1)">-1</button>
+                                    <span class="commander-damage-total" id="commanderDamage2-4">0</span>
+                                    <button class="btn btn-commander-increase" onclick="changeCommanderDamage(2, 4, 1)">+1</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="controls">
+                        <div class="life-controls">
+                            <button class="btn btn-decrease" onclick="changeLife(2, -1)">-1</button>
+                            <button class="btn btn-increase" onclick="changeLife(2, 1)">+1</button>
+                            <button class="btn btn-decrease" onclick="changeLife(2, -5)">-5</button>
+                            <button class="btn btn-increase" onclick="changeLife(2, 5)">+5</button>
+                        </div>
+                        <button class="btn btn-reset" onclick="resetLife(2)">Reset</button>
+                    </div>
+                </div>
+
+                <div class="player-section" id="player3">
+                                    <button class="menu-toggle" onclick="toggleMenu(3)">☰</button>
+                <div class="side-menu" id="menu3">
+                    <div class="menu-header">
+                        <h4>Player 3 Menu</h4>
+                        <button class="menu-close" onclick="toggleMenu(3)">×</button>
+                    </div>
+                    <div class="menu-content">
+                        <div class="menu-item">
+                            <label>Status Effects:</label>
+                            <button class="monarch-toggle" onclick="toggleMonarch(3)" id="monarchBtn3">Claim Monarchy</button>
+                            <button class="initiative-toggle" onclick="toggleInitiative(3)" id="initiativeBtn3">Take Initiative</button>
+                            <button class="ascend-toggle" onclick="toggleAscend(3)" id="ascendBtn3">Ascend</button>
+                        </div>
+                        <div class="menu-item">
+                            <label>Poison Counters:</label>
+                            <div class="poison-controls">
+                                <button class="btn-poison-decrease" onclick="changePoison(3, -1)">-1</button>
+                                <span class="poison-count" id="poisonMenu3">0</span>
+                                <button class="btn-poison-increase" onclick="changePoison(3, 1)">+1</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Commander Tax:</label>
+                            <div class="tax-controls">
+                                <button class="btn-tax-decrease" onclick="changeTax(3, -1)">-2</button>
+                                <span class="tax-count" id="taxMenu3">0</span>
+                                <button class="btn-tax-increase" onclick="changeTax(3, 1)">+2</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Energy Counters:</label>
+                            <div class="energy-controls">
+                                <button class="btn-energy-decrease" onclick="changeEnergy(3, -1)">-1</button>
+                                <span class="energy-count" id="energyMenu3">0</span>
+                                <button class="btn-energy-increase" onclick="changeEnergy(3, 1)">+1</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Experience Counters:</label>
+                            <div class="experience-controls">
+                                <button class="btn-experience-decrease" onclick="changeExperience(3, -1)">-1</button>
+                                <span class="experience-count" id="experienceMenu3">0</span>
+                                <button class="btn-experience-increase" onclick="changeExperience(3, 1)">+1</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Storm Count:</label>
+                            <div class="storm-controls">
+                                <button class="btn-storm-decrease" onclick="changeStorm(3, -1)">-1</button>
+                                <span class="storm-count" id="stormMenu3">0</span>
+                                <button class="btn-storm-increase" onclick="changeStorm(3, 1)">+1</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="player-header">
+                    <input type="text" class="player-name" id="playerName3" value="Player 3" onchange="updatePlayerName(3)" maxlength="16">
+                    <div class="status-indicators">
+                        <div class="crown-indicator hidden" id="crown3">👑</div>
+                        <div class="initiative-indicator hidden" id="initiative3">⚔️</div>
+                        <div class="ascend-indicator hidden" id="ascend3">🌟</div>
+                    </div>
+                    <div class="life-display">
+                        <div class="life-total-circle">
+                            <input type="number" class="life-total" id="life3" value="40" onchange="updateLifeFromInput(3)" onblur="validateLifeInput(3)">
+                        </div>
+                        <div class="counter-bubbles-container">
+                            <div class="tax-display hidden" id="taxDisplay3">
+                                <span class="tax-icon">💰</span><span class="tax-value">0</span>
+                            </div>
+                            <div class="poison-display hidden" id="poison3">
+                                <span class="poison-icon">☠️</span><span class="poison-value">0</span>
+                            </div>
+                            <div class="experience-display hidden" id="experience3">
+                                <span class="experience-icon">✨</span><span class="experience-value">0</span>
+                            </div>
+                            <div class="energy-display hidden" id="energy3">
+                                <span class="energy-icon">⚡</span><span class="energy-value">0</span>
+                            </div>
+                            <div class="storm-display hidden" id="storm3">
+                                <span class="storm-icon">🌪️</span><span class="storm-value">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    
+                    <div class="commander-damage-section">
+                        <div class="commander-damage-header">
+                            <div class="commander-damage-label">Commander Damage</div>
+                            <button class="commander-damage-toggle" onclick="toggleCommanderDamageMenu(3)">⌄</button>
+                        </div>
+                        <div class="commander-damage-menu" id="commanderDamageMenu3">
+                            <div class="commander-damage-item" data-from-player="1">
+                                <span class="commander-damage-player-name" id="commanderDamageLabel3-1">Player 1</span>
+                                <div class="commander-damage-controls">
+                                    <button class="btn btn-commander-decrease" onclick="changeCommanderDamage(3, 1, -1)">-1</button>
+                                    <span class="commander-damage-total" id="commanderDamage3-1">0</span>
+                                    <button class="btn btn-commander-increase" onclick="changeCommanderDamage(3, 1, 1)">+1</button>
+                                </div>
+                            </div>
+                            <div class="commander-damage-item" data-from-player="2">
+                                <span class="commander-damage-player-name" id="commanderDamageLabel3-2">Player 2</span>
+                                <div class="commander-damage-controls">
+                                    <button class="btn btn-commander-decrease" onclick="changeCommanderDamage(3, 2, -1)">-1</button>
+                                    <span class="commander-damage-total" id="commanderDamage3-2">0</span>
+                                    <button class="btn btn-commander-increase" onclick="changeCommanderDamage(3, 2, 1)">+1</button>
+                                </div>
+                            </div>
+                            <div class="commander-damage-item" data-from-player="4">
+                                <span class="commander-damage-player-name" id="commanderDamageLabel3-4">Player 4</span>
+                                <div class="commander-damage-controls">
+                                    <button class="btn btn-commander-decrease" onclick="changeCommanderDamage(3, 4, -1)">-1</button>
+                                    <span class="commander-damage-total" id="commanderDamage3-4">0</span>
+                                    <button class="btn btn-commander-increase" onclick="changeCommanderDamage(3, 4, 1)">+1</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="controls">
+                        <div class="life-controls">
+                            <button class="btn btn-decrease" onclick="changeLife(3, -1)">-1</button>
+                            <button class="btn btn-increase" onclick="changeLife(3, 1)">+1</button>
+                            <button class="btn btn-decrease" onclick="changeLife(3, -5)">-5</button>
+                            <button class="btn btn-increase" onclick="changeLife(3, 5)">+5</button>
+                        </div>
+                        <button class="btn btn-reset" onclick="resetLife(3)">Reset</button>
+                    </div>
+                </div>
+
+                <div class="player-section" id="player4">
+                                    <button class="menu-toggle" onclick="toggleMenu(4)">☰</button>
+                <div class="side-menu" id="menu4">
+                    <div class="menu-header">
+                        <h4>Player 4 Menu</h4>
+                        <button class="menu-close" onclick="toggleMenu(4)">×</button>
+                    </div>
+                    <div class="menu-content">
+                        <div class="menu-item">
+                            <label>Status Effects:</label>
+                            <button class="monarch-toggle" onclick="toggleMonarch(4)" id="monarchBtn4">Claim Monarchy</button>
+                            <button class="initiative-toggle" onclick="toggleInitiative(4)" id="initiativeBtn4">Take Initiative</button>
+                            <button class="ascend-toggle" onclick="toggleAscend(4)" id="ascendBtn4">Ascend</button>
+                        </div>
+                        <div class="menu-item">
+                            <label>Poison Counters:</label>
+                            <div class="poison-controls">
+                                <button class="btn-poison-decrease" onclick="changePoison(4, -1)">-1</button>
+                                <span class="poison-count" id="poisonMenu4">0</span>
+                                <button class="btn-poison-increase" onclick="changePoison(4, 1)">+1</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Commander Tax:</label>
+                            <div class="tax-controls">
+                                <button class="btn-tax-decrease" onclick="changeTax(4, -1)">-2</button>
+                                <span class="tax-count" id="taxMenu4">0</span>
+                                <button class="btn-tax-increase" onclick="changeTax(4, 1)">+2</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Energy Counters:</label>
+                            <div class="energy-controls">
+                                <button class="btn-energy-decrease" onclick="changeEnergy(4, -1)">-1</button>
+                                <span class="energy-count" id="energyMenu4">0</span>
+                                <button class="btn-energy-increase" onclick="changeEnergy(4, 1)">+1</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Experience Counters:</label>
+                            <div class="experience-controls">
+                                <button class="btn-experience-decrease" onclick="changeExperience(4, -1)">-1</button>
+                                <span class="experience-count" id="experienceMenu4">0</span>
+                                <button class="btn-experience-increase" onclick="changeExperience(4, 1)">+1</button>
+                            </div>
+                        </div>
+                        <div class="menu-item">
+                            <label>Storm Count:</label>
+                            <div class="storm-controls">
+                                <button class="btn-storm-decrease" onclick="changeStorm(4, -1)">-1</button>
+                                <span class="storm-count" id="stormMenu4">0</span>
+                                <button class="btn-storm-increase" onclick="changeStorm(4, 1)">+1</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="player-header">
+                    <input type="text" class="player-name" id="playerName4" value="Player 4" onchange="updatePlayerName(4)" maxlength="16">
+                    <div class="status-indicators">
+                        <div class="crown-indicator hidden" id="crown4">👑</div>
+                        <div class="initiative-indicator hidden" id="initiative4">⚔️</div>
+                        <div class="ascend-indicator hidden" id="ascend4">🌟</div>
+                    </div>
+                    <div class="life-display">
+                        <div class="life-total-circle">
+                            <input type="number" class="life-total" id="life4" value="40" onchange="updateLifeFromInput(4)" onblur="validateLifeInput(4)">
+                        </div>
+                        <div class="counter-bubbles-container">
+                            <div class="tax-display hidden" id="taxDisplay4">
+                                <span class="tax-icon">💰</span><span class="tax-value">0</span>
+                            </div>
+                            <div class="poison-display hidden" id="poison4">
+                                <span class="poison-icon">☠️</span><span class="poison-value">0</span>
+                            </div>
+                            <div class="experience-display hidden" id="experience4">
+                                <span class="experience-icon">✨</span><span class="experience-value">0</span>
+                            </div>
+                            <div class="energy-display hidden" id="energy4">
+                                <span class="energy-icon">⚡</span><span class="energy-value">0</span>
+                            </div>
+                            <div class="storm-display hidden" id="storm4">
+                                <span class="storm-icon">🌪️</span><span class="storm-value">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    
+                    <div class="commander-damage-section">
+                        <div class="commander-damage-header">
+                            <div class="commander-damage-label">Commander Damage</div>
+                            <button class="commander-damage-toggle" onclick="toggleCommanderDamageMenu(4)">⌄</button>
+                        </div>
+                        <div class="commander-damage-menu" id="commanderDamageMenu4">
+                            <div class="commander-damage-item" data-from-player="1">
+                                <span class="commander-damage-player-name" id="commanderDamageLabel4-1">Player 1</span>
+                                <div class="commander-damage-controls">
+                                    <button class="btn btn-commander-decrease" onclick="changeCommanderDamage(4, 1, -1)">-1</button>
+                                    <span class="commander-damage-total" id="commanderDamage4-1">0</span>
+                                    <button class="btn btn-commander-increase" onclick="changeCommanderDamage(4, 1, 1)">+1</button>
+                                </div>
+                            </div>
+                            <div class="commander-damage-item" data-from-player="2">
+                                <span class="commander-damage-player-name" id="commanderDamageLabel4-2">Player 2</span>
+                                <div class="commander-damage-controls">
+                                    <button class="btn btn-commander-decrease" onclick="changeCommanderDamage(4, 2, -1)">-1</button>
+                                    <span class="commander-damage-total" id="commanderDamage4-2">0</span>
+                                    <button class="btn btn-commander-increase" onclick="changeCommanderDamage(4, 2, 1)">+1</button>
+                                </div>
+                            </div>
+                            <div class="commander-damage-item" data-from-player="3">
+                                <span class="commander-damage-player-name" id="commanderDamageLabel4-3">Player 3</span>
+                                <div class="commander-damage-controls">
+                                    <button class="btn btn-commander-decrease" onclick="changeCommanderDamage(4, 3, -1)">-1</button>
+                                    <span class="commander-damage-total" id="commanderDamage4-3">0</span>
+                                    <button class="btn btn-commander-increase" onclick="changeCommanderDamage(4, 3, 1)">+1</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="controls">
+                        <div class="life-controls">
+                            <button class="btn btn-decrease" onclick="changeLife(4, -1)">-1</button>
+                            <button class="btn btn-increase" onclick="changeLife(4, 1)">+1</button>
+                            <button class="btn btn-decrease" onclick="changeLife(4, -5)">-5</button>
+                            <button class="btn btn-increase" onclick="changeLife(4, 5)">+5</button>
+                        </div>
+                        <button class="btn btn-reset" onclick="resetLife(4)">Reset</button>
+                    </div>
+                </div>
+            </main>
+
+            <aside class="history-log">
+                <div class="history-header">
+                    <h3>Game History</h3>
+                    <button class="btn btn-clear-history" onclick="clearHistory()">Clear</button>
+                </div>
+                <div class="history-content" id="historyContent">
+                    <div class="history-item">
+                        <span class="history-time">Game Started</span>
+                        <span class="history-text">All players set to 40 life</span>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="soundManager.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
