@@ -1,19 +1,30 @@
 /* Animation Effects */
 .life-effect {
     position: absolute;
+    top: 50%;
     font-size: 1.5rem;
     font-weight: bold;
     pointer-events: none;
-    animation: lifeEffect 1s ease-out forwards;
     z-index: 1000;
+    text-shadow: 
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000;
 }
 
 .life-effect.positive {
     color: #10b981;
+    left: calc(50% + 80px);
+    transform: translate(-50%, -50%);
+    animation: lifeEffectRight 1s ease-out forwards;
 }
 
 .life-effect.negative {
     color: #ef4444;
+    left: calc(50% - 80px);
+    transform: translate(-50%, -50%);
+    animation: lifeEffectLeft 1s ease-out forwards;
 }
 
 .commander-damage-effect {
@@ -36,14 +47,25 @@
     color: #10b981;
 }
 
-@keyframes lifeEffect {
+@keyframes lifeEffectRight {
     0% {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translate(-50%, -50%) scale(1);
     }
     100% {
         opacity: 0;
-        transform: translateY(-50px) scale(1.2);
+        transform: translate(-50%, -100px) scale(1.2);
+    }
+}
+
+@keyframes lifeEffectLeft {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -100px) scale(1.2);
     }
 }
 

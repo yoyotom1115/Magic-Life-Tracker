@@ -30,6 +30,12 @@ let player2Storm = 0;
 let player3Storm = 0;
 let player4Storm = 0;
 
+// Token tracking state
+let player1Tokens = [];
+let player2Tokens = [];
+let player3Tokens = [];
+let player4Tokens = [];
+
 // Commander tax state
 let player1Tax = 0;
 let player2Tax = 0;
@@ -118,6 +124,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (taxDisplay) {
             taxDisplay.classList.add('hidden');
         }
+    }
+    
+    // Initialize token displays
+    for (let i = 1; i <= 4; i++) {
+        updateTokenDisplay(i);
     }
     
     // Add initial history entry
@@ -444,6 +455,7 @@ function resetLife(player) {
     addResetEffect(player);
     resetPoison(player);
     resetTax(player);
+    resetTokens(player);
     soundManager.play('reset');
     
     // Add history entry
@@ -515,6 +527,9 @@ function changeTax(player, amount) {
         taxDisplayContainer.classList.add('hidden');
     }
 
+    // Update token bubble positioning
+    updateTokenBubble(player);
+
     // Add to history
     const changeText = adjustedAmount > 0 ? `+${adjustedAmount}` : adjustedAmount;
     addHistoryEntry(getCurrentTime(), `${playerName} commander tax: ${taxCount} → ${newCount} (${changeText})`, 'tax');
@@ -541,6 +556,9 @@ function resetTax(player) {
     taxDisplay.textContent = '0';
     taxDisplayContainer.classList.add('hidden');
 
+    // Update token bubble positioning
+    updateTokenBubble(player);
+
     // Add to history if there was tax
     if (oldCount > 0) {
         addHistoryEntry(getCurrentTime(), `${playerName} commander tax reset: ${oldCount} → 0`, 'reset');
@@ -562,13 +580,14 @@ function resetAll() {
     updateDisplay();
     addResetAllEffect();
     
-    // Reset all counters and commander tax
+    // Reset all counters, commander tax, and tokens
     for (let i = 1; i <= 4; i++) {
         resetPoison(i);
         resetEnergy(i);
         resetExperience(i);
         resetStorm(i);
         resetTax(i);
+        resetTokens(i);
     }
 
     // Reset monarch status if there is one
@@ -750,14 +769,15 @@ function addLifeChangeEffect(player, amount) {
     const lifeElement = getLifeElement(player);
     if (!lifeElement) return;
     
-    const lifeDisplay = lifeElement.parentElement;
+    const lifeCircle = lifeElement.parentElement; // This is the life-total-circle
     
     // Create temporary effect element
     const effect = document.createElement('div');
     effect.className = `life-effect ${amount > 0 ? 'positive' : 'negative'}`;
     effect.textContent = amount > 0 ? `+${amount}` : amount;
     
-    lifeDisplay.appendChild(effect);
+    // Append to the life circle for precise positioning
+    lifeCircle.appendChild(effect);
     
     // Remove effect after animation
     setTimeout(() => {
@@ -1005,6 +1025,9 @@ function changePoison(player, amount) {
         poisonDisplay.classList.add('hidden');
     }
 
+    // Update token bubble positioning
+    updateTokenBubble(player);
+
     // Play sound effect
     soundManager.play('poison');
 
@@ -1031,6 +1054,9 @@ function resetPoison(player) {
     // Update displays
     menuDisplay.textContent = '0';
     poisonDisplay.classList.add('hidden');
+
+    // Update token bubble positioning
+    updateTokenBubble(player);
 
     // Add to history if there were poison counters
     if (oldCount > 0) {
@@ -1258,6 +1284,9 @@ function changeEnergy(player, amount) {
         energyDisplay.classList.add('hidden');
     }
 
+    // Update token bubble positioning
+    updateTokenBubble(player);
+
     // Play sound effect
     soundManager.play('counter');
 
@@ -1284,6 +1313,9 @@ function resetEnergy(player) {
     // Update displays
     menuDisplay.textContent = '0';
     energyDisplay.classList.add('hidden');
+
+    // Update token bubble positioning
+    updateTokenBubble(player);
 
     // Add to history if there were energy counters
     if (oldCount > 0) {
@@ -1329,6 +1361,9 @@ function changeExperience(player, amount) {
         experienceDisplay.classList.add('hidden');
     }
 
+    // Update token bubble positioning
+    updateTokenBubble(player);
+
     // Play sound effect
     soundManager.play('counter');
 
@@ -1355,6 +1390,9 @@ function resetExperience(player) {
     // Update displays
     menuDisplay.textContent = '0';
     experienceDisplay.classList.add('hidden');
+
+    // Update token bubble positioning
+    updateTokenBubble(player);
 
     // Add to history if there were experience counters
     if (oldCount > 0) {
@@ -1400,6 +1438,9 @@ function changeStorm(player, amount) {
         stormDisplay.classList.add('hidden');
     }
 
+    // Update token bubble positioning
+    updateTokenBubble(player);
+
     // Play sound effect
     soundManager.play('counter');
 
@@ -1427,9 +1468,515 @@ function resetStorm(player) {
     menuDisplay.textContent = '0';
     stormDisplay.classList.add('hidden');
 
+    // Update token bubble positioning
+    updateTokenBubble(player);
+
     // Add to history if there were storm counters
     if (oldCount > 0) {
         addHistoryEntry(getCurrentTime(), `${playerName} storm count reset: ${oldCount} → 0`, 'reset');
+    }
+}
+
+// Custom Token Management Functions
+
+// Get player tokens by player number
+function getPlayerTokens(player) {
+    switch(player) {
+        case 1: return player1Tokens;
+        case 2: return player2Tokens;
+        case 3: return player3Tokens;
+        case 4: return player4Tokens;
+        default: return [];
+    }
+}
+
+// Set player tokens by player number
+function setPlayerTokens(player, tokens) {
+    switch(player) {
+        case 1: player1Tokens = tokens; break;
+        case 2: player2Tokens = tokens; break;
+        case 3: player3Tokens = tokens; break;
+        case 4: player4Tokens = tokens; break;
+    }
+}
+
+// Add or update a token for a player
+function addOrUpdateToken(player, tokenName, quantity) {
+    const tokens = getPlayerTokens(player);
+    const existingTokenIndex = tokens.findIndex(token => token.name.toLowerCase() === tokenName.toLowerCase());
+    
+    if (existingTokenIndex !== -1) {
+        // Update existing token
+        const oldQuantity = tokens[existingTokenIndex].quantity;
+        tokens[existingTokenIndex].quantity = quantity;
+        updateTokenDisplay(player);
+        
+        // Add to history
+        const playerName = getPlayerName(player);
+        addHistoryEntry(getCurrentTime(), `${playerName} updated ${tokenName}: ${oldQuantity} → ${quantity}`, 'token');
+    } else {
+        // Add new token
+        const newToken = {
+            id: Date.now() + Math.random(), // Simple unique ID
+            name: tokenName,
+            quantity: quantity,
+            icon: getTokenIcon(tokenName)
+        };
+        tokens.push(newToken);
+        updateTokenDisplay(player);
+        
+        // Add to history
+        const playerName = getPlayerName(player);
+        addHistoryEntry(getCurrentTime(), `${playerName} added ${quantity}x ${tokenName}`, 'token');
+    }
+    
+    soundManager.play('counter');
+}
+
+// Remove a token for a player
+function removeToken(player, tokenId) {
+    const tokens = getPlayerTokens(player);
+    const tokenIndex = tokens.findIndex(token => token.id === tokenId);
+    
+    if (tokenIndex !== -1) {
+        const removedToken = tokens[tokenIndex];
+        tokens.splice(tokenIndex, 1);
+        updateTokenDisplay(player);
+        
+        // Add to history
+        const playerName = getPlayerName(player);
+        addHistoryEntry(getCurrentTime(), `${playerName} removed ${removedToken.quantity}x ${removedToken.name}`, 'token');
+        
+        soundManager.play('click');
+    }
+}
+
+// Change token quantity
+function changeTokenQuantity(player, tokenId, change) {
+    const tokens = getPlayerTokens(player);
+    const token = tokens.find(t => t.id === tokenId);
+    
+    if (token) {
+        const oldQuantity = token.quantity;
+        token.quantity = Math.max(0, token.quantity + change);
+        
+        // Remove token if quantity reaches 0
+        if (token.quantity === 0) {
+            removeToken(player, tokenId);
+            return;
+        }
+        
+        updateTokenDisplay(player);
+        
+        // Add to history
+        const playerName = getPlayerName(player);
+        const changeText = change > 0 ? `+${change}` : change.toString();
+        addHistoryEntry(getCurrentTime(), `${playerName} ${token.name}: ${oldQuantity} → ${token.quantity} (${changeText})`, 'token');
+        
+        soundManager.play('counter');
+    }
+}
+
+// Get appropriate icon for token type
+function getTokenIcon(tokenName) {
+    const name = tokenName.toLowerCase();
+    
+    // Common token type mappings
+    const iconMap = {
+        'treasure': '🪙',
+        'food': '🍖',
+        'clue': '🔍',
+        'blood': '🩸',
+        'spirit': '👻',
+        'soldier': '🛡️',
+        'zombie': '🧟',
+        'goblin': '👹',
+        'elf': '🧝',
+        'beast': '🐺',
+        'dragon': '🐉',
+        'angel': '😇',
+        'demon': '😈',
+        'artifact': '⚙️',
+        'energy': '⚡',
+        'poison': '☠️',
+        'acorn': '🌰',
+        'rad': '☢️',
+        'ticket': '🎫',
+        'powerstone': '💎'
+    };
+    
+    // Check for partial matches
+    for (const [key, icon] of Object.entries(iconMap)) {
+        if (name.includes(key)) {
+            return icon;
+        }
+    }
+    
+    return '🎯'; // Default icon
+}
+
+// Update token display for a player
+function updateTokenDisplay(player) {
+    const tokenContainer = document.getElementById(`tokenList${player}`);
+    const tokenSection = document.getElementById(`tokenSection${player}`);
+    const emptyState = document.getElementById(`tokenEmpty${player}`);
+    
+    if (!tokenContainer || !tokenSection || !emptyState) return;
+    
+    const tokens = getPlayerTokens(player);
+    
+    // Clear existing display
+    tokenContainer.innerHTML = '';
+    
+    if (tokens.length === 0) {
+        emptyState.style.display = 'block';
+        updateTokenBubble(player);
+        return;
+    }
+    
+    emptyState.style.display = 'none';
+    
+    // Render each token
+    tokens.forEach(token => {
+        const tokenElement = document.createElement('div');
+        tokenElement.className = 'token-item';
+        tokenElement.innerHTML = `
+            <div class="token-info">
+                <span class="token-icon">${token.icon}</span>
+                <span class="token-text">${token.quantity}x ${token.name}</span>
+            </div>
+            <div class="token-controls">
+                <button class="btn-token-decrease" onclick="changeTokenQuantity(${player}, ${token.id}, -1)" title="Decrease">-</button>
+                <button class="btn-token-increase" onclick="changeTokenQuantity(${player}, ${token.id}, 1)" title="Increase">+</button>
+                <button class="btn-token-edit" onclick="editToken(${player}, ${token.id})" title="Edit">✏️</button>
+                <button class="btn-token-remove" onclick="removeToken(${player}, ${token.id})" title="Remove">🗑️</button>
+            </div>
+        `;
+        tokenContainer.appendChild(tokenElement);
+    });
+    
+    // Update the token bubble display
+    updateTokenBubble(player);
+}
+
+// Toggle token section for a player
+function toggleTokenSection(player) {
+    const tokenMenu = document.getElementById(`tokenMenu${player}`);
+    const toggle = document.querySelector(`#tokenSection${player} .token-section-toggle`);
+    
+    if (tokenMenu.classList.contains('active')) {
+        tokenMenu.classList.remove('active');
+        toggle.textContent = '⌄';
+    } else {
+        tokenMenu.classList.add('active');
+        toggle.textContent = '⌃';
+    }
+    
+    soundManager.play('click');
+}
+
+// Show token add modal
+function showTokenModal(player) {
+    const modal = document.getElementById('tokenModal');
+    const playerNameSpan = document.getElementById('tokenModalPlayerName');
+    const tokenNameInput = document.getElementById('tokenNameInput');
+    const tokenQuantityInput = document.getElementById('tokenQuantityInput');
+    
+    // Set player context
+    modal.dataset.player = player;
+    playerNameSpan.textContent = getPlayerName(player);
+    
+    // Reset form
+    tokenNameInput.value = '';
+    tokenQuantityInput.value = '1';
+    
+    // Show modal
+    modal.classList.add('active');
+    tokenNameInput.focus();
+    
+    soundManager.play('click');
+}
+
+// Hide token modal
+function hideTokenModal() {
+    const modal = document.getElementById('tokenModal');
+    modal.classList.remove('active');
+    soundManager.play('click');
+}
+
+// Submit new token
+function submitToken() {
+    const modal = document.getElementById('tokenModal');
+    const player = parseInt(modal.dataset.player);
+    const tokenName = document.getElementById('tokenNameInput').value.trim();
+    const tokenQuantity = parseInt(document.getElementById('tokenQuantityInput').value);
+    
+    // Validation
+    if (!tokenName) {
+        alert('Please enter a token name');
+        return;
+    }
+    
+    if (isNaN(tokenQuantity) || tokenQuantity < 1) {
+        alert('Please enter a valid quantity (1 or more)');
+        return;
+    }
+    
+    if (tokenName.length > 30) {
+        alert('Token name must be 30 characters or less');
+        return;
+    }
+    
+    // Add the token
+    addOrUpdateToken(player, tokenName, tokenQuantity);
+    
+    // Hide modal
+    hideTokenModal();
+}
+
+// Edit existing token
+function editToken(player, tokenId) {
+    const tokens = getPlayerTokens(player);
+    const token = tokens.find(t => t.id === tokenId);
+    
+    if (!token) return;
+    
+    const modal = document.getElementById('tokenModal');
+    const playerNameSpan = document.getElementById('tokenModalPlayerName');
+    const tokenNameInput = document.getElementById('tokenNameInput');
+    const tokenQuantityInput = document.getElementById('tokenQuantityInput');
+    
+    // Set player context and current values
+    modal.dataset.player = player;
+    modal.dataset.editingTokenId = tokenId;
+    playerNameSpan.textContent = getPlayerName(player);
+    tokenNameInput.value = token.name;
+    tokenQuantityInput.value = token.quantity;
+    
+    // Show modal
+    modal.classList.add('active');
+    tokenNameInput.focus();
+    tokenNameInput.select();
+    
+    soundManager.play('click');
+}
+
+// Submit edited token
+function submitEditedToken() {
+    const modal = document.getElementById('tokenModal');
+    const player = parseInt(modal.dataset.player);
+    const tokenId = parseFloat(modal.dataset.editingTokenId);
+    const tokenName = document.getElementById('tokenNameInput').value.trim();
+    const tokenQuantity = parseInt(document.getElementById('tokenQuantityInput').value);
+    
+    // Validation
+    if (!tokenName) {
+        alert('Please enter a token name');
+        return;
+    }
+    
+    if (isNaN(tokenQuantity) || tokenQuantity < 1) {
+        alert('Please enter a valid quantity (1 or more)');
+        return;
+    }
+    
+    if (tokenName.length > 30) {
+        alert('Token name must be 30 characters or less');
+        return;
+    }
+    
+    // Update the token
+    const tokens = getPlayerTokens(player);
+    const token = tokens.find(t => t.id === tokenId);
+    
+    if (token) {
+        const oldName = token.name;
+        const oldQuantity = token.quantity;
+        
+        token.name = tokenName;
+        token.quantity = tokenQuantity;
+        token.icon = getTokenIcon(tokenName);
+        
+        updateTokenDisplay(player);
+        
+        // Add to history
+        const playerName = getPlayerName(player);
+        if (oldName !== tokenName || oldQuantity !== tokenQuantity) {
+            addHistoryEntry(getCurrentTime(), `${playerName} edited token: ${oldQuantity}x ${oldName} → ${tokenQuantity}x ${tokenName}`, 'token');
+        }
+        
+        soundManager.play('counter');
+    }
+    
+    // Clear editing state and hide modal
+    delete modal.dataset.editingTokenId;
+    hideTokenModal();
+}
+
+// Reset all tokens for a player
+function resetTokens(player) {
+    const tokens = getPlayerTokens(player);
+    const tokenCount = tokens.length;
+    
+    if (tokenCount === 0) return;
+    
+    setPlayerTokens(player, []);
+    updateTokenDisplay(player);
+    
+    // Add to history
+    const playerName = getPlayerName(player);
+    addHistoryEntry(getCurrentTime(), `${playerName} cleared all tokens (${tokenCount} removed)`, 'reset');
+    
+    soundManager.play('reset');
+}
+
+// Submit token from modal (handles both add and edit)
+function submitTokenFromModal() {
+    const modal = document.getElementById('tokenModal');
+    
+    // Check if we're editing an existing token
+    if (modal.dataset.editingTokenId) {
+        submitEditedToken();
+    } else {
+        submitToken();
+    }
+}
+
+// Update token bubble display for a player
+function updateTokenBubble(player) {
+    const tokenBubbleLeft = document.getElementById(`tokenDisplay${player}`);
+    const rightContainer = document.getElementById(`counterBubblesRight${player}`);
+    
+    if (!tokenBubbleLeft || !rightContainer) return;
+    
+    const tokens = getPlayerTokens(player);
+    
+    if (tokens.length === 0) {
+        tokenBubbleLeft.classList.add('hidden');
+        rightContainer.classList.add('hidden');
+        // Clear any existing individual token bubbles in right container
+        clearIndividualTokenBubbles(player);
+        return;
+    }
+    
+    // Count visible counters in the left column (excluding tokens)
+    const leftCounters = [
+        document.getElementById(`taxDisplay${player}`),
+        document.getElementById(`poison${player}`),
+        document.getElementById(`experience${player}`),
+        document.getElementById(`energy${player}`),
+        document.getElementById(`storm${player}`)
+    ];
+    
+    const visibleLeftCounters = leftCounters.filter(counter => 
+        counter && !counter.classList.contains('hidden')
+    ).length;
+    
+    // Determine if tokens should overflow to right column
+    const shouldOverflow = visibleLeftCounters >= 5;
+    
+    if (shouldOverflow) {
+        // Hide left token bubble, show individual token bubbles in right container
+        tokenBubbleLeft.classList.add('hidden');
+        rightContainer.classList.remove('hidden');
+        
+        // Create individual bubbles for each token type in right container
+        createIndividualTokenBubbles(player, tokens);
+    } else {
+        // Show combined token bubble in left column
+        tokenBubbleLeft.classList.remove('hidden');
+        rightContainer.classList.add('hidden');
+        clearIndividualTokenBubbles(player);
+        
+        // Calculate total token count for left bubble
+        const totalCount = tokens.reduce((sum, token) => sum + token.quantity, 0);
+        
+        // Determine which icon to show (most common token type, or generic if tied)
+        let displayIcon = '🎯'; // Default icon
+        
+        if (tokens.length === 1) {
+            // Single token type - use its icon
+            displayIcon = tokens[0].icon;
+        } else {
+            // Multiple token types - find the most common, or use generic icon
+            const tokenCounts = {};
+            tokens.forEach(token => {
+                tokenCounts[token.icon] = (tokenCounts[token.icon] || 0) + token.quantity;
+            });
+            
+            const sortedIcons = Object.entries(tokenCounts).sort((a, b) => b[1] - a[1]);
+            
+            // If there's a clear winner (more than others), use that icon
+            if (sortedIcons.length > 1 && sortedIcons[0][1] > sortedIcons[1][1]) {
+                displayIcon = sortedIcons[0][0];
+            }
+            // Otherwise keep the generic token icon for mixed collections
+        }
+        
+        // Update left bubble display
+        const tokenIconLeft = tokenBubbleLeft.querySelector('.token-icon');
+        const tokenValueLeft = tokenBubbleLeft.querySelector('.token-value');
+        if (tokenIconLeft && tokenValueLeft) {
+            tokenIconLeft.textContent = displayIcon;
+            tokenValueLeft.textContent = totalCount;
+        }
+    }
+}
+
+// Clear individual token bubbles from right container
+function clearIndividualTokenBubbles(player) {
+    const rightContainer = document.getElementById(`counterBubblesRight${player}`);
+    if (!rightContainer) return;
+    
+    // Remove all dynamically created token bubbles
+    const dynamicBubbles = rightContainer.querySelectorAll('.token-bubble-individual');
+    dynamicBubbles.forEach(bubble => bubble.remove());
+}
+
+// Create individual token bubbles in right container
+function createIndividualTokenBubbles(player, tokens) {
+    clearIndividualTokenBubbles(player);
+    const rightContainer = document.getElementById(`counterBubblesRight${player}`);
+    if (!rightContainer) return;
+    
+    tokens.forEach((token, index) => {
+        const bubble = document.createElement('div');
+        bubble.className = 'token-bubble-individual token-display';
+        bubble.innerHTML = `
+            <span class="token-icon">${token.icon}</span>
+            <span class="token-value">${token.quantity}</span>
+        `;
+        
+        // Add click handlers for increment/decrement
+        bubble.onclick = (e) => {
+            e.preventDefault();
+            if (e.ctrlKey || e.metaKey) {
+                // Ctrl/Cmd + click to decrement
+                changeTokenQuantity(player, token.id, -1);
+            } else {
+                // Regular click to increment
+                changeTokenQuantity(player, token.id, 1);
+            }
+        };
+        
+        // Add right-click for editing
+        bubble.oncontextmenu = (e) => {
+            e.preventDefault();
+            editToken(player, token.id);
+        };
+        
+        rightContainer.appendChild(bubble);
+    });
+}
+
+// Handle Enter key in token modal
+function handleTokenModalKeydown(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        submitTokenFromModal();
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        hideTokenModal();
     }
 }
 
@@ -1472,4 +2019,22 @@ window.changeExperience = changeExperience;
 window.resetExperience = resetExperience;
 window.changeStorm = changeStorm;
 window.resetStorm = resetStorm;
-window.toggleSettings = toggleSettings; 
+window.toggleSettings = toggleSettings;
+window.toggleCommanderDamageMenu = toggleCommanderDamageMenu;
+window.getPlayerTokens = getPlayerTokens;
+window.addOrUpdateToken = addOrUpdateToken;
+window.removeToken = removeToken;
+window.changeTokenQuantity = changeTokenQuantity;
+window.updateTokenDisplay = updateTokenDisplay;
+window.toggleTokenSection = toggleTokenSection;
+window.showTokenModal = showTokenModal;
+window.hideTokenModal = hideTokenModal;
+window.submitToken = submitToken;
+window.editToken = editToken;
+window.submitEditedToken = submitEditedToken;
+window.resetTokens = resetTokens;
+window.submitTokenFromModal = submitTokenFromModal;
+window.handleTokenModalKeydown = handleTokenModalKeydown;
+window.updateTokenBubble = updateTokenBubble;
+window.clearIndividualTokenBubbles = clearIndividualTokenBubbles;
+window.createIndividualTokenBubbles = createIndividualTokenBubbles; 
